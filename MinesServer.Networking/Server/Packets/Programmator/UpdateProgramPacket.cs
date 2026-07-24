@@ -6,13 +6,14 @@ using System.Linq;
 
 namespace MinesServer.Networking.Server.Packets.Programmator;
 
-public readonly record struct UpdateProgramPacket(int ProgramId, string DisplayName, IReadOnlyList<(ProgAction Operator, string Label, string Value)> Instructions) : IRootServerPacket<UpdateProgramPacket>
+public readonly record struct UpdateProgramPacket(int ProgramId, string DisplayName, IReadOnlyList<(ProgAction Operator, string Label, string Value)> Instructions, int[] Breakpoints) : IRootServerPacket<UpdateProgramPacket>
 {
     public ushort PacketCode => RootServerPacketCodeProvider.Cache<UpdateProgramPacket>.Code;
 
     public int Size =>
         sizeof(int) + // ProgramId
         sizeof(byte) + DisplayName.Length * 2 + // DisplayName
+        sizeof(ushort) + Breakpoints.Length * sizeof(int) + // Breakpoints
         Instructions.Sum(x => sizeof(ProgAction) + sizeof(byte) + x.Value.Length * 2 + sizeof(byte) + x.Label.Length * 2); // Instructions
 
     public int Encode(Span<byte> output)
@@ -20,6 +21,7 @@ public readonly record struct UpdateProgramPacket(int ProgramId, string DisplayN
         var writer = output.Writer();
         writer.Write(ProgramId);
         writer.WriteU1PrefixedUtf16(DisplayName);
+        writer.WriteU2PrefixedArray(Breakpoints);
         foreach(var instruction in Instructions)
         {
             writer.Write(instruction.Operator);
@@ -34,14 +36,16 @@ public readonly record struct UpdateProgramPacket(int ProgramId, string DisplayN
         var reader = input.Reader();
         var progId = reader.Read4();
         var progName = reader.ReadU1PrefixedUtf16(out _);
+        var breakpoints = reader.ReadU2PrefixedArray<int>(out _);
         List<(ProgAction Operator, string Label, string Value)> instructions = new();
         while(reader.CanRead)
             instructions.Add((reader.Read<ProgAction>(), reader.ReadU1PrefixedUtf16(out _), reader.ReadU1PrefixedUtf16(out _)));
-        return new(progId, progName, instructions);
+        return new(progId, progName, instructions, breakpoints);
     }
 
     public bool Equals(UpdateProgramPacket other) =>
         ProgramId == other.ProgramId &&
         DisplayName == other.DisplayName &&
-        Instructions.SequenceEqual(other.Instructions);
+        Instructions.SequenceEqual(other.Instructions) &&
+        Breakpoints.SequenceEqual(other.Breakpoints);
 }
