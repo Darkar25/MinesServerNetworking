@@ -7,12 +7,12 @@ using System.Linq;
 
 namespace MinesServer.Networking.Server.Packets.World;
 
-public readonly record struct AudioPacket(SFX EffectType, ushort TargetBotId, ushort X, ushort Y, IReadOnlyList<StringPairPacket> Parameters) : IHBPacket<AudioPacket>
+public readonly record struct VFXPacket(VFX EffectType, ushort TargetBotId, ushort X, ushort Y, IReadOnlyList<StringPairPacket> Parameters) : IHBPacket<VFXPacket>
 {
-    public byte PacketCode => HBPacketCodeProvider.Cache<AudioPacket>.Code;
+    public byte PacketCode => HBPacketCodeProvider.Cache<VFXPacket>.Code;
 
     public int Size =>
-        sizeof(SFX) + // EffectType
+        sizeof(VFX) + // EffectType
         sizeof(ushort) + // TargetBotId
         sizeof(ushort) + // X
         sizeof(ushort) + // Y
@@ -32,10 +32,10 @@ public readonly record struct AudioPacket(SFX EffectType, ushort TargetBotId, us
         return writer.Position;
     }
 
-    public static AudioPacket Decode(ReadOnlySpan<byte> input)
+    public static VFXPacket Decode(ReadOnlySpan<byte> input)
     {
         var reader = input.Reader();
-        var effect = reader.Read<SFX>();
+        var effect = reader.Read<VFX>();
         var botid = reader.ReadU2();
         var x = reader.ReadU2();
         var y = reader.ReadU2();
@@ -49,7 +49,7 @@ public readonly record struct AudioPacket(SFX EffectType, ushort TargetBotId, us
         return new(effect, botid, x, y, parameters);
     }
 
-    public bool Equals(AudioPacket other) =>
+    public bool Equals(VFXPacket other) =>
         EffectType == other.EffectType &&
         TargetBotId == other.TargetBotId &&
         X == other.X &&

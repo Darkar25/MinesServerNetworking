@@ -10,7 +10,6 @@ internal class AudioPacketTest : PacketTest<AudioPacket>
         50,
         60,
         [
-            new("clr", "F00"),
-            new("radius", "15")
+            new("test", "ASDasdasd")
         ]);
 }
