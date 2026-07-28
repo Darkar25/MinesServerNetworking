@@ -31,6 +31,7 @@ public class RootClientPacketCodeProvider : NetworkPacketCodeProvider<IRootClien
         Register<PongPacket>();
         Register<OpenClanClickPacket>();
         Register<OpenHelpClickPacket>();
+        Register<OpenProgramListClickPacket>();
         Register<OpenSettingsClickPacket>();
         Register<DeselectItemPacket>();
         Register<SelectItemPacket>();
